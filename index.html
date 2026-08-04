@@ -1,0 +1,57 @@
+<!doctype html>
+<!--
+  lang / title 은 **부팅 전 기본값**일 뿐이다.
+  실제 값은 src/i18n 의 initI18n() 이 저장된 선택 또는 navigator.language 로
+  판별해서 document.documentElement.lang 과 document.title 에 덮어쓴다.
+  여기에 특정 언어를 박아 두고 끝내면 나머지 8개 언어가 전부 틀린 lang 을
+  갖게 되어 스크린리더·검색 인덱싱이 어긋난다.
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <!--
+      viewport-fit=cover 는 필수.
+      이게 없으면 CSS env(safe-area-inset-*) 가 전부 0 으로 나와서
+      토스 밖(브라우저/Capacitor APK) safe area 폴백이 통째로 죽는다.
+      user-scalable=no + maximum-scale=1 은 게임 중 더블탭 줌 방지.
+    -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#0B1020" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <title>Territory Clash</title>
+    <script type="module" crossorigin src="./assets/index-CxIv0sUQ.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/style-CLXmJuvV.css">
+    <link rel="manifest" href="./manifest.json" />
+    <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="./icons/icon-512.png" />
+    <link rel="apple-touch-icon" href="./icons/icon-192.png" />
+    <meta name="application-name" content="Territory Clash" />
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="stage"></canvas>
+      <!--
+        SDK 4종 부팅 진단 패널.
+        "번들에 들어갔다"와 "실기기에서 실제로 켜진다"는 다른 문제라서
+        실기기에서 눈으로 확인할 수단이 필요하다.
+        정식 게임 UI 가 붙으면 이 요소와 main.ts 의 renderProbe() 를 지워라.
+      -->
+      <div id="sdk-probe" hidden></div>
+    </div>
+    <script>
+      // Injected by store/build_pwa.py - offline support for the PWA build.
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", function () {
+          navigator.serviceWorker.register("./sw.js").catch(function (err) {
+            console.warn("[pwa] service worker registration failed:", err);
+          });
+        });
+      }
+    </script>
+  </body>
+</html>
