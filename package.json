@@ -1,0 +1,27 @@
+{
+  "name": "territory-clash",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "i18n:verify": "node scripts/i18n-verify.mjs",
+    "i18n:test": "node scripts/i18n-detect-test.mjs && node scripts/i18n-nick-parity.mjs",
+    "verify:web-safe": "npm run build:web && python ../../channel_shim_kit/check-ad-leak.py dist",
+    "check:all": "npm run typecheck && npm run i18n:verify && npm run i18n:test && npm run verify:web-safe",
+    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
+    "build:web": "npm run clean && vite build",
+    "build": "npm run clean && ait build",
+    "build:play": "npm run clean && vite build && cap sync android"
+  },
+  "dependencies": {
+    "@apps-in-toss/bridge-core": "2.10.8",
+    "@apps-in-toss/web-framework": "2.10.8"
+  },
+  "devDependencies": {
+    "typescript": "5.8.3",
+    "vite": "^6.0.0"
+  }
+}

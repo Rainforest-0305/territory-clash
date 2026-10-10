@@ -1,0 +1,40 @@
+/**
+ * 개인정보처리방침 링크 — 시작 메뉴 «안»에 얹는 한 줄.
+ *
+ * ★이 파일은 src/game/menu.css 와 별도다(래퍼 소유 영역, ads/menuBanners.css 와
+ *   같은 패턴). src/game/** 를 무접촉으로 두기 위해서다(installPrivacyLink.ts
+ *   주석 참고).
+ * ★배치: .tc-lang(언어 선택) 다음 · .tc-actions(시작 버튼, sticky) «이전».
+ *   플레이 영역·광고 지면(.tc-adslot-top/bot, .tc-menu 밖에 별도로 붙는다)과는
+ *   구조적으로 떨어져 있다 — 인접 배치가 아니다.
+ * ★터치 타깃: Web 기준 WCAG 2.2 AA = 24 CSS px. 44px(iOS)/48dp(Android)를
+ *   그대로 가져오지 않는다(PRIVACY_LINK_KIT.md §4 실측 근거). min-height 40px로
+ *   여유 있게 잡아 24px 하한을 크게 상회한다.
+ */
+.tc-privacy-row {
+  margin: 2px 0 0;
+  padding: 0 2px;
+}
+
+.tc-privacy-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  color: var(--ink-2, #8fa3c8);
+  font-size: 12.5px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+}
+
+.tc-privacy-link:active {
+  opacity: 0.7;
+}
+
+.tc-privacy-link:focus-visible {
+  outline: 2px solid var(--gold-a, #ffd166);
+  outline-offset: 2px;
+  border-radius: 4px;
+}

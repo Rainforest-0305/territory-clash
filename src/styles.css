@@ -1,0 +1,205 @@
+/*
+ * 전역 스타일.
+ *
+ * safe area 변수(--sat/--sar/--sab/--sal)의 초기값을 CSS env() 로 잡아 둔다.
+ * 토스 안에서는 src/toss/safeArea.ts 가 브릿지 실측값으로 덮어쓴다.
+ * 토스 밖(브라우저/Capacitor APK)에서는 이 env() 값이 그대로 쓰인다.
+ * 즉 어느 환경에서도 0 이 되는 구간이 없다.
+ */
+:root {
+  --sat: env(safe-area-inset-top, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+
+  --bg: #0b1020;
+  --fg: #e8eeff;
+  --muted: #8fa3c8;
+  --primary: #3a7bff;
+  --danger: #ff5c5c;
+  --sheet: #161c30;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Pretendard',
+    'Malgun Gothic', system-ui, sans-serif;
+  /*
+   * 게임에서 필수. 브라우저 기본 제스처를 전부 죽인다.
+   *  - overscroll-behavior: 당겨서 새로고침 / 스크롤 체이닝 차단
+   *  - touch-action: none  : 더블탭 줌 / 팬 제스처가 드래그 조작을 먹는 것 차단
+   *  - user-select: none   : 길게 눌렀을 때 텍스트 선택 팝업 차단
+   * (granite.config.ts 의 webViewProps bounces/overScrollMode 와 짝을 이룬다.
+   *  네이티브 쪽만 끄고 웹 쪽을 안 끄면 안드로이드에서 여전히 튄다.)
+   */
+  overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#app {
+  position: fixed;
+  inset: 0;
+  display: block;
+}
+
+/*
+ * 캔버스는 화면 전체를 덮는다. safe area padding 을 캔버스에 주지 않는 이유:
+ * 게임 배경은 화면 끝까지 차야 하고(transparentBackground 네비바 뒤까지),
+ * "안전 영역"은 캔버스 안에서 readInsetPx() 로 계산해 UI 만 밀어넣는다.
+ */
+#stage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  touch-action: none;
+}
+
+/* --- SDK 4종 부팅 진단 패널 (게임 화면 완성되면 삭제 가능) --------------- */
+#sdk-probe {
+  position: absolute;
+  left: calc(var(--sal) + 12px);
+  right: calc(var(--sar) + 12px);
+  bottom: calc(var(--sab) + 12px);
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.55);
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.6;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  pointer-events: none;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* --- 종료 확인 모달 ------------------------------------------------------ */
+.tc-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.6);
+  padding: calc(var(--sat) + 16px) calc(var(--sar) + 16px) calc(var(--sab) + 16px)
+    calc(var(--sal) + 16px);
+  animation: tc-fade 0.16s ease-out;
+}
+
+.tc-modal-sheet {
+  width: 100%;
+  max-width: 420px;
+  background: var(--sheet);
+  border-radius: 20px;
+  padding: 24px 20px 16px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+  animation: tc-rise 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.tc-modal-title {
+  margin: 0 0 8px;
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--fg);
+}
+
+.tc-modal-desc {
+  margin: 0 0 20px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.tc-modal-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.tc-btn {
+  flex: 1;
+  /* 44px 미만이면 심사/접근성에서 지적된다. 터치 타깃 최소치. */
+  min-height: 48px;
+  border: 0;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: opacity 0.12s ease;
+}
+
+.tc-btn:active {
+  opacity: 0.7;
+}
+
+.tc-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.tc-btn-ghost {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--fg);
+}
+
+.tc-btn-danger {
+  background: var(--danger);
+  color: #ffffff;
+}
+
+.fatal {
+  padding: calc(var(--sat) + 32px) 24px 24px;
+  color: var(--fg);
+}
+.fatal h1 {
+  font-size: 18px;
+  margin: 0 0 8px;
+}
+.fatal pre {
+  white-space: pre-wrap;
+  color: var(--danger);
+  font-size: 12px;
+}
+
+@keyframes tc-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes tc-rise {
+  from {
+    transform: translateY(24px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tc-modal-overlay,
+  .tc-modal-sheet {
+    animation: none;
+  }
+}

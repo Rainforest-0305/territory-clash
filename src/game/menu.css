@@ -1,0 +1,533 @@
+/* ==========================================================================
+ * 시작 메뉴 (모드 · 난이도)
+ *
+ * hud.css 를 건드리지 않고 파일을 나눈 이유: hud.css 는 v10 발송본과 «바이트
+ * 동일»이 검증 근거로 쓰이고 있어서, 메뉴 때문에 그 파일이 흔들리면 안 된다.
+ * (vite cssCodeSplit:false 라 최종 번들은 어차피 CSS 1장으로 합쳐진다)
+ *
+ * ★ 변수(--ink-0 / --acc-0 / --line / --sat…)는 hud.css :root 정의를 그대로 쓴다.
+ *   여기서 색을 새로 만들지 마라.
+ * ========================================================================== */
+
+/* 메뉴가 떠 있는 동안 인게임 HUD 를 숨긴다(hud.ts setHidden).
+   display:none 이 아니라 visibility 라서 레이아웃이 흔들리지 않는다. */
+.tc-hud.tc-hidden {
+  visibility: hidden;
+}
+
+.tc-menu {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  display: none;
+  align-items: center;
+  align-items: safe center;
+  justify-content: center;
+  /* ★2026-08-23: 스크롤은 .tc-menuscroll 이 맡는다. 여기는 «틀»만 잡는다.
+     이 요소가 스크롤하면 시트 전체가 움직여서 CTA 를 시트 바닥에 붙일 수 없다. */
+  overflow: hidden;
+  padding: calc(var(--sat) + var(--navh)) calc(var(--sar) + 14px) calc(var(--sab) + 14px)
+    calc(var(--sal) + 14px);
+  background: rgba(5, 6, 11, 0.55);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
+.tc-menu.show {
+  display: flex;
+}
+
+.tc-menusheet {
+  width: 100%;
+  max-width: 420px;
+  /* ★시트는 «가용 높이를 절대 넘지 않는다». 넘치는 건 안쪽 .tc-menuscroll 이
+     스크롤한다. 이게 있어야 CTA 가 항상 시트 바닥 = 화면 안에 있다. */
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  padding: 20px 20px 16px;
+  border-radius: 22px;
+  background: linear-gradient(180deg, #1b2238, #121728);
+  border: 1px solid var(--line);
+  box-shadow: 0 18px 56px rgba(0, 0, 0, 0.55);
+}
+
+/* ★넘치는 내용«만» 스크롤한다. CTA·방침링크는 이 밖에 있어 절대 안 가려진다.
+   min-height:0 이 없으면 flex 자식이 안 줄어들어 overflow 가 안 생긴다(필수). */
+.tc-menuscroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  /* body 의 touch-action:none 을 이 스크롤 영역에서만 세로 팬으로 되연다.
+     pan-y 이지 auto 가 아닌 이유: 가로 팬/핀치 줌은 계속 막아야 게임 조작이
+     안전하다. (2026-08-22 원인1 수정을 여기로 «이관»한 것이다 — 스크롤
+     컨테이너가 .tc-menu 에서 여기로 옮겨졌으므로 이 선언도 같이 와야 한다) */
+  touch-action: pan-y;
+  scroll-padding-bottom: 8px;
+}
+
+.tc-menu-title {
+  margin: 0 0 2px;
+  font-size: 26px;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  color: var(--ink-0);
+  text-align: center;
+}
+.tc-menu-sub {
+  margin: 0 0 16px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink-2);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.tc-menu-label {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--ink-2);
+}
+.tc-menu-group {
+  margin-bottom: 12px;
+}
+
+/* ---- 세그먼트 선택 ------------------------------------------------------- */
+.tc-seg {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 6px;
+}
+.tc-seg button {
+  min-height: 46px;
+  padding: 0 4px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.045);
+  color: var(--ink-1);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.2;
+  cursor: pointer;
+  touch-action: manipulation;
+  /* 러시아어·독일어 라벨이 길다. 잘라내지 말고 줄바꿈 + 축소를 허용한다. */
+  white-space: normal;
+  word-break: keep-all;
+}
+/* 난이도는 5칸이라 글자가 더 작아야 한다(ru 'Сложно' 기준으로 맞췄다) */
+.tc-seg.tc-seg5 button {
+  font-size: 12px;
+  padding: 0 2px;
+}
+.tc-seg button[aria-checked='true'] {
+  color: #05060b;
+  border-color: transparent;
+  background: linear-gradient(135deg, var(--acc-0), var(--acc-1));
+  /* ★T2(2026-08-22, taste-skill §9.A) — hud.css 의 .tc-cta 와 같은 방향:
+     외곽 네온(6px/18px 색번짐)을 걷어내고 절제된 입체감으로 바꿨다. */
+  box-shadow:
+    0 3px 8px rgba(5, 6, 11, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+.tc-seg button:active {
+  transform: scale(0.98);
+}
+/* 키보드 포커스는 «반드시» 보이게 둔다. outline:none 금지. */
+.tc-seg button:focus-visible,
+.tc-menusheet .tc-cta:focus-visible {
+  outline: 2px solid var(--acc-0);
+  outline-offset: 2px;
+}
+
+.tc-menu-desc {
+  margin: -4px 0 12px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink-1);
+  font-variant-numeric: tabular-nums;
+}
+.tc-menu-hint {
+  margin: -6px 0 12px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--ink-2);
+  min-height: 17px;
+}
+
+.tc-menu-best {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding: 11px 13px;
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.05);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-1);
+}
+.tc-menu-best b {
+  font-size: 17px;
+  font-weight: 900;
+  color: var(--gold-a);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── 오늘의 대결(출석) 카드 ──────────────────────────────────────────────────
+ * ★신규 모달 아님 — .tc-menu-best 와 같은 급의 «카드 하나»다.
+ * ★T2(2026-08-22, taste-skill §9.A "no neon/outer glows")를 미리 반영한다 —
+ *   .tc-cta 의 예전 스타일(진한 네온 박스섀도)을 복제하지 않는다. 여기서부터
+ *   절제된 틴티드 섀도로 새로 짓는다(다음 T2 패스에서 .tc-cta 도 같은 방향으로 맞춘다). */
+.tc-dc {
+  margin: 2px 0 14px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: rgba(56, 242, 255, 0.055);
+}
+.tc-dc[hidden] {
+  display: none;
+}
+.tc-dc-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.tc-dc-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--ink-0);
+}
+.tc-dc-status {
+  margin: 0 0 10px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--ink-1);
+  font-variant-numeric: tabular-nums;
+}
+.tc-dc-play {
+  width: 100%;
+  min-height: 40px;
+  border: 1px solid rgba(56, 242, 255, 0.4);
+  border-radius: 11px;
+  background: rgba(56, 242, 255, 0.1);
+  color: var(--ink-0);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  touch-action: manipulation;
+  /* 절제된 틴티드 섀도 — 외곽 네온 글로우 아님(taste-skill §9.A) */
+  box-shadow: 0 1px 0 rgba(56, 242, 255, 0.12) inset;
+}
+.tc-dc-play:active:not(:disabled) {
+  transform: scale(0.98);
+}
+.tc-dc-play:disabled {
+  border-color: var(--line);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--ink-2);
+  cursor: default;
+  box-shadow: none;
+}
+.tc-dc-play:focus-visible {
+  outline: 2px solid var(--acc-0);
+  outline-offset: 2px;
+}
+
+/* 화면이 낮은 기기(가로 모드·작은 폰)에서 시트가 잘리지 않게 압축한다. */
+@media (max-height: 700px) {
+  .tc-menu-title {
+    font-size: 21px;
+  }
+  .tc-menusheet {
+    padding: 14px 16px 12px;
+  }
+  .tc-menu-group {
+    margin-bottom: 9px;
+  }
+  .tc-seg button {
+    min-height: 42px;
+  }
+  .tc-dc {
+    margin: 0 0 10px;
+    padding: 9px 12px;
+  }
+  .tc-dc-play {
+    min-height: 36px;
+  }
+}
+
+/* ==========================================================================
+ * ★2026-08-22 긴급 정정 — 「게임을 시작할 수 없다」 결함 2건
+ *
+ * 증상(President 실기기, 세로): 시작 화면이 세로로 넘쳐 「시작」 버튼이 화면
+ *   밖으로 밀려났고, 스크롤도 안 돼서 «게임 진입 자체»가 불가능했다.
+ *   위아래 배너 광고 2개가 세로 공간을 더 먹어 상황을 악화시켰다.
+ *
+ * ── 원인 1 : 터치 스크롤이 «막혀» 있었다 ────────────────────────────────
+ *   styles.css:46 이 body 에 `touch-action: none` 을 건다(게임 드래그 조작을
+ *   브라우저 팬 제스처로부터 보호하려는 «의도된» 설정이다 — 지우면 안 된다).
+ *   .tc-menu 는 `overflow-y: auto` 를 갖지만 touch-action 을 «다시 열지»
+ *   않았다. touch-action 은 상속되지 않지만 히트테스트된 요소에서 조상 방향으로
+ *   결합되므로, body 의 none 이 그대로 이 스크롤 컨테이너를 덮었다.
+ *   ⇒ 손가락 팬이 통째로 무시됐다. 마우스 휠은 touch-action 의 대상이 «아니라서»
+ *     데스크톱에서는 멀쩡히 스크롤됐다.
+ *   ⚠️**헤드리스 검증이 원리상 못 잡는 결함이다.** 스크린샷도 정상으로 나온다.
+ *     실기기 터치 또는 devtools 터치 에뮬레이션이라야 재현된다.
+ *
+ * ── 원인 2 : 「시작」이 DOM 맨 끝이라 처음 화면에 «안 보인다» ────────────
+ *   시트 자식 순서: 제목 → 부제 → 오늘의대결 → 경기시간 → 설명 → 난이도 →
+ *                  힌트 → 최고기록 → 언어선택 → [시작]
+ *   출석 카드(.tc-dc)가 새로 들어오면서 세로가 늘었다.
+ *   ⇒ 스크롤을 고쳐도 「한 눈에 안 들어온다」는 남는다. 처음 보는 유저가
+ *     «무엇을 눌러야 하는지» 모른 채 스크롤부터 해야 한다.
+ *   ⇒ CTA 를 시트 바닥에 «고정»한다. 어떤 콘텐츠 길이에서도 항상 보이고
+ *     항상 눌린다. 위 내용은 그 아래로 스크롤된다.
+ *
+ * ⛔되돌리지 마라. 되돌리면 게임을 시작할 수 없는 상태로 회귀한다.
+ * ⛔DOM 순서는 안 바꿨다 — 스크린리더 읽기 순서와 탭 순서를 보존하기 위해서다.
+ *   시각적 고정만 CSS 로 한다.
+ * ========================================================================== */
+
+.tc-menusheet .tc-actions {
+  /* ★2026-08-23: position:sticky 를 «걷어냈다».
+     스티키는 CTA 를 항상 보이게 만들었을 뿐, 그 아래 내용(언어 선택·최고기록·
+     개인정보처리방침)을 덮는 문제는 그대로 남겼다 — 미봉책이었다.
+     지금은 .tc-menuscroll 의 «형제»라서 겹칠 대상 자체가 없다.
+     ⇒ 음수 마진·그라디언트 페이드·border-radius 보정이 전부 불필요해졌다. */
+  flex: none;
+  margin-top: 10px;
+}
+
+/* --------------------------------------------------------------------------
+ * ★2026-08-22 정정 2차 — 「한 눈에 안 들어온다」
+ *
+ * 1차(스티키 CTA)로 «시작은 가능»해졌지만, 콘텐츠가 뷰포트보다 길면 스티키 바가
+ * 바로 위 항목(언어 선택)을 덮는다. 스크롤하면 드러나지만 «첫 화면»이 잘려 보인다.
+ * ⇒ 근본은 세로가 너무 긴 것이다. 압축해서 «애초에 다 들어가게» 한다.
+ *
+ * 압축 임계를 700 → 820px 로 올린 이유 [실측]:
+ *   토스 미니앱 웹뷰는 상하 배너 광고가 «웹뷰 밖»이라 실제 가시 높이가
+ *   기기 높이보다 150~200px 짧다. iPhone 14(844) 에서 실측 가시영역이 ~650px 다.
+ *   700 임계는 그 구간을 «겨우» 덮지만, 광고가 하나만 뜨는 경우(~750px)를 놓친다.
+ *   820 이면 흔한 세로 폰 전 구간을 덮으면서, 태블릿·가로모드는 원래 여백을 지킨다.
+ * ⛔압축은 «여백»만 줄인다. 글자 크기·터치 타깃은 접근성 하한 아래로 내리지 않는다
+ *   (세그먼트 버튼 42px, CTA 50px 유지 — WCAG 2.2 AA 24px 를 크게 상회).
+ * -------------------------------------------------------------------------- */
+
+@media (max-height: 820px) {
+  .tc-menusheet {
+    padding: 16px 18px 14px;
+  }
+  .tc-menu-title {
+    font-size: 23px;
+  }
+  .tc-menu-sub {
+    margin-bottom: 12px;
+  }
+  .tc-menu-group {
+    margin-bottom: 10px;
+  }
+  .tc-dc {
+    margin: 0 0 11px;
+    padding: 10px 13px;
+  }
+  .tc-menu-desc,
+  .tc-menu-hint {
+    margin-top: 4px;
+    margin-bottom: 8px;
+  }
+  .tc-menu-best {
+    padding: 9px 13px;
+  }
+  .tc-lang {
+    margin-top: 8px;
+  }
+  .tc-menusheet .tc-actions {
+    margin-top: 8px;
+  }
+}
+
+
+/* --------------------------------------------------------------------------
+ * ★2026-08-23 정정 3차 — 「여전히 짤린다」(President 실기기)
+ *
+ * 앞선 2차(스티키 CTA)는 «미봉책»이었다. CTA 를 항상 보이게 만들었을 뿐,
+ * 그 아래 언어 선택·최고기록·개인정보처리방침을 «덮었다». 폐기했다.
+ *
+ * 3차에서 한 일:
+ *   ① 구조   시트를 flex 컬럼으로 바꿔 CTA 를 스크롤 «밖» 형제 푸터로 뺐다.
+ *            ⇒ 겹침이 CSS 규칙이 아니라 레이아웃 «불변식»이 됐다(구조적 0).
+ *   ② 지면   상단 배너 제거(President 결정) — 세로 52px 회수.
+ *   ③ 압축   여기. ①②만으로도 «가려지는» 건 사라지지만 토스 실가시영역
+ *            (390×652)에서 105px 이 여전히 내부 스크롤로 남았다[실측].
+ *            그 105px 을 «여백에서만» 회수해 한 화면에 담는다.
+ *
+ * ⛔여백만 줄인다. 글자 크기·터치 타깃은 접근성 하한 위로 유지한다.
+ *   세그먼트 42px · CTA 46px · 오늘의대결 36px — Web WCAG 2.2 AA 하한 24 CSS px
+ *   을 전부 크게 상회한다(「44 로 통일」은 웹 기준이 아니다).
+ * -------------------------------------------------------------------------- */
+
+@media (max-height: 700px) {
+  .tc-menusheet {
+    padding: 11px 16px 8px;
+  }
+  .tc-menu-title {
+    font-size: 20px;
+    margin-bottom: 0;
+  }
+  /* ★"경기 시간과 난이도를 고르세요" 는 순수 안내문이고, 바로 밑의
+     「경기 시간」·「난이도」 라벨이 같은 정보를 이미 전달한다 —
+     좁은 화면에서 중복을 버린다.
+     ⛔"64 × 112 맵 · 6인"(.tc-menu-desc)은 숨기지 «않는다». 모드에 따라 값이
+       바뀌는 «정보»지 장식이 아니다. 자리 때문에 정보를 버리지 않는다. */
+  .tc-menu-sub {
+    display: none;
+  }
+
+  .tc-dc {
+    margin: 0 0 5px;
+    padding: 8px 12px;
+  }
+  .tc-dc-head {
+    margin-bottom: 5px;
+  }
+  .tc-dc-status {
+    margin-bottom: 6px;
+  }
+  .tc-dc-play {
+    min-height: 36px;
+  }
+
+  .tc-menu-label {
+    margin-bottom: 2px;
+  }
+  .tc-menu-group {
+    margin-bottom: 5px;
+  }
+  .tc-seg button {
+    min-height: 42px;
+  }
+
+  .tc-menu-desc,
+  .tc-menu-hint {
+    margin-top: 2px;
+    margin-bottom: 3px;
+  }
+  .tc-menu-hint {
+    min-height: 15px;
+  }
+
+  .tc-menu-best {
+    padding: 7px 12px;
+    margin-bottom: 5px;
+  }
+
+  .tc-lang {
+    margin: 2px 0 0;
+    padding: 5px 12px;
+  }
+  .tc-lang-select {
+    padding-top: 6px;
+    padding-bottom: 6px;
+  }
+
+  .tc-menusheet .tc-actions {
+    margin-top: 4px;
+  }
+  .tc-menusheet .tc-cta {
+    min-height: 46px;
+  }
+}
+
+/* ==========================================================================
+ * ★2026-08-30 그래픽 고도화 — 시작 화면 위계 (DESIGN.md §7)
+ *   제목은 «단색 잉크 + 오프셋 하드섀도»(그라디언트 텍스트·제로오프셋 글로우 금지 — AI 티 0).
+ *   부제는 제목 «아래» 본문형 한 줄. 세그먼트 선택은 CTA 와 같은 오로라 그라디언트.
+ * ========================================================================== */
+.tc-menu-title {
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.05;
+  margin: 2px 0 6px;
+  text-shadow: 3px 3px 0 rgba(59, 130, 246, 0.55);
+}
+.tc-menu-sub {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-1);
+  margin-bottom: 14px;
+}
+.tc-menu-label {
+  font-size: 12px;
+  letter-spacing: 0.03em;
+  color: var(--ink-2);
+}
+.tc-seg button {
+  min-height: 46px;
+  font-size: 15px;
+  color: var(--ink-0);
+  background: rgba(255, 255, 255, 0.055);
+  border-color: rgba(168, 178, 216, 0.18);
+}
+.tc-seg.tc-seg5 button {
+  font-size: 13px;
+}
+.tc-seg button[aria-checked='true'] {
+  color: #06121a;
+  background: linear-gradient(135deg, #7df4ff, #3b82f6 70%, #4c6bff);
+}
+.tc-menu-desc {
+  font-family: inherit;
+  color: var(--ink-1);
+}
+.tc-menu-best {
+  border: 1px solid rgba(168, 178, 216, 0.14);
+}
+.tc-menu-best b {
+  font-size: 18px;
+}
+.tc-dc {
+  background: rgba(125, 244, 255, 0.06);
+  border-color: rgba(125, 244, 255, 0.22);
+}
+.tc-dc-play {
+  border-color: rgba(125, 244, 255, 0.45);
+  background: rgba(125, 244, 255, 0.12);
+  min-height: 44px;
+}
+.tc-menusheet {
+  background: linear-gradient(180deg, #1c2340, #111627);
+  border-color: rgba(168, 178, 216, 0.18);
+  box-shadow:
+    0 18px 56px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+@media (max-height: 820px) {
+  .tc-menu-title {
+    font-size: 26px;
+  }
+}
+@media (max-height: 700px) {
+  .tc-menu-title {
+    font-size: 22px;
+  }
+  .tc-sound {
+    margin-top: 2px;
+  }
+  .tc-switch {
+    min-height: 40px;
+  }
+}

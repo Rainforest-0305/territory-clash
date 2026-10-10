@@ -1,0 +1,197 @@
+/* ==========================================================================
+ * 「오늘의 대결 알림」 — 설정 행 + 1회 안내 스트립 (2026-09-10 · 토스 안에서만 그려진다)
+ *
+ * ★src/game/menu.css 와 별도 파일이다(privacyLink.css·menuBanners.css 와 같은 패턴) —
+ *   src/game 무접촉. 색·변수는 hud.css :root 토큰만 쓴다(--ink-0/1/2 · --acc-0/1 · --line · --gold-a · --success-2).
+ * ★게임 오버레이 규칙: backdrop-filter 없음 · 반복 애니메이션 없음 · 터치 타깃 ≥ 24 CSS px(WCAG 2.2 AA).
+ *   실제 값: 행 버튼 44px · 스트립 「받기」 40px · 닫기 32px.
+ * ★로케일 길이를 가정하지 않는다 — 텍스트 칸은 min-width:0 으로 줄바꿈, 버튼은 내용만큼 늘어난다.
+ * ========================================================================== */
+
+/* ── 설정 행: .tc-lang 문법(라벨 + 컨트롤)을 그대로 쓴다. 효과음 행 «다음»에 붙는다. ── */
+.tc-push {
+  margin-top: 6px;
+}
+.tc-pushbtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 6px 14px 6px 11px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  background: rgba(10, 12, 22, 0.9);
+  color: var(--ink-0);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.tc-pushbtn svg {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  color: var(--acc-0);
+}
+/* 켜짐 = 상태 표시. 색 «만»으로 말하지 않는다 — 텍스트가 「켜짐」이다. */
+.tc-pushbtn.on {
+  border-color: rgba(36, 229, 160, 0.38);
+}
+.tc-pushbtn.on svg {
+  color: var(--success-2);
+}
+.tc-pushbtn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.tc-pushbtn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+.tc-pushbtn:focus-visible {
+  outline: 2px solid var(--acc-0);
+  outline-offset: 2px;
+}
+.tc-push-hint {
+  margin: 6px 4px 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--ink-2);
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+/* 오류(구버전 토스 등) — 경고색. 붉은 danger 는 「내가 뭘 잘못했나」로 읽혀 과하다. */
+.tc-push-hint.err {
+  color: var(--gold-a);
+}
+
+/* ── 1회 안내 스트립: 오늘의 대결 카드(.tc-dc) «다음». 카드가 아니라 «한 줄 프롬프트»다. ── */
+.tc-pushnudge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 10px 6px 10px 12px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.045);
+  text-align: left;
+}
+.tc-pushnudge[hidden] {
+  display: none;
+}
+.tc-pushnudge-ic {
+  width: 32px;
+  height: 32px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(125, 244, 255, 0.1);
+  color: var(--acc-0);
+}
+.tc-pushnudge-ic svg {
+  width: 18px;
+  height: 18px;
+}
+.tc-pushnudge-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  /* 한글은 어절 단위로 줄을 바꾼다(hud 루트와 같은 규칙). 실렌더에서 「알/려 드려요」로 갈라진 것을 잡았다. */
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+.tc-pushnudge-title {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+  color: var(--ink-0);
+}
+.tc-pushnudge-sub {
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--ink-2);
+}
+.tc-pushnudge-cta {
+  flex: none;
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid rgba(125, 244, 255, 0.45);
+  border-radius: 11px;
+  background: rgba(125, 244, 255, 0.12);
+  color: var(--ink-0);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow: 0 1px 0 rgba(125, 244, 255, 0.12) inset;
+}
+.tc-pushnudge-cta:disabled {
+  opacity: 0.6;
+  cursor: default;
+  box-shadow: none;
+}
+.tc-pushnudge-cta:active:not(:disabled) {
+  transform: scale(0.97);
+}
+.tc-pushnudge-x {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ink-2);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.tc-pushnudge-x svg {
+  width: 14px;
+  height: 14px;
+}
+.tc-pushnudge-x:active {
+  transform: scale(0.94);
+}
+.tc-pushnudge-cta:focus-visible,
+.tc-pushnudge-x:focus-visible {
+  outline: 2px solid var(--acc-0);
+  outline-offset: 2px;
+}
+
+/* 짧은 화면 — 여백만 줄인다(menu.css 의 압축 임계와 같다). 글자·터치 타깃 하한은 유지. */
+@media (max-height: 820px) {
+  .tc-pushnudge {
+    margin-bottom: 10px;
+  }
+}
+@media (max-height: 700px) {
+  .tc-pushnudge {
+    margin-bottom: 5px;
+    padding: 8px 4px 8px 10px;
+    gap: 8px;
+  }
+  .tc-pushnudge-cta {
+    min-height: 36px;
+    padding: 0 12px;
+  }
+  .tc-push {
+    margin-top: 2px;
+  }
+  .tc-pushbtn {
+    min-height: 40px;
+  }
+  .tc-push-hint {
+    margin-top: 3px;
+  }
+}

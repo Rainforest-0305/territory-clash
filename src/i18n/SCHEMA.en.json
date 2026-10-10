@@ -1,0 +1,588 @@
+{
+  "$comment": "FROZEN key schema for Territory Clash i18n. en is the source of truth. Do NOT add/remove/rename keys - every locale is typed against en, so drift is a compile error. Placeholders {likeThis} must survive translation verbatim. No HTML in any value. Numbers arrive pre-formatted via Intl.NumberFormat.",
+  "locales": [
+    "en",
+    "ko",
+    "ja",
+    "zh-Hans",
+    "es",
+    "pt-BR",
+    "de",
+    "fr",
+    "ru"
+  ],
+  "baseLocale": "en",
+  "keyCount": 173,
+  "namePools": {
+    "$comment": "nick.name.* and bot.name.* are PRE-COMPOSED, 64 each. The original code concatenated adjective+noun at runtime (8x8), which breaks adjective-noun gender/number agreement in es/pt-BR/fr/de/ru and word order elsewhere. Do NOT translate these literally: invent 64 distinct, natural, short names per list in your language. Grammatical standalone. <=12 chars preferred, ~16 hard cap. No duplicates within a list, no profanity, no real person/brand names. ko entries are the original 64 concatenations laid out at idx = i*8 + j, so existing users keep identical nicknames.",
+    "nick.name.*": {
+      "count": 64,
+      "register": "gentle / poetic; ko source is adjective + nature noun, e.g. 빠른소나기 = \"swift rain-shower\""
+    },
+    "bot.name.*": {
+      "count": 64,
+      "register": "real-estate / land-grab personas, e.g. 성실한부동산 = \"diligent realtor\", 냉철한지주 = \"cold-blooded landlord\""
+    }
+  },
+  "notLocalized": {
+    "src/toss/identity.ts INVALID_CATEGORY console.error": "developer-only diagnostic, fires only on Toss console misconfiguration, audience is the dev team - stays Korean",
+    "granite.config.ts brand.displayName": "Toss mini-app store listing name for a Korea-only channel, compiled into platform bundles, must match console registration - stays Korean",
+    "Korean code comments and both CSS files": "developer documentation - untouched"
+  },
+  "keys": {
+    "brand.name": {
+      "en": "Territory Clash"
+    },
+    "game.title": {
+      "en": "Territory Clash"
+    },
+    "splash.subtitle": {
+      "en": "{cols} × {rows} · {players} players · {seconds}s",
+      "params": [
+        "cols",
+        "rows",
+        "players",
+        "seconds"
+      ]
+    },
+    "hud.rank.unit": {
+      "en": "RANK"
+    },
+    "hud.time.unit": {
+      "en": "SEC"
+    },
+    "hud.rate": {
+      "en": "+{rate}/s",
+      "params": [
+        "rate"
+      ]
+    },
+    "hud.bounce": {
+      "en": "Bounce"
+    },
+    "hud.bounce.aria": {
+      "en": "Triple bounce"
+    },
+    "modal.pause.title": {
+      "en": "Paused"
+    },
+    "modal.pause.body": {
+      "en": "The game is on hold. Press back once more to open the quit confirmation."
+    },
+    "modal.pause.resume": {
+      "en": "Resume"
+    },
+    "modal.revive.title": {
+      "en": "You lost all your territory"
+    },
+    "modal.revive.body": {
+      "en": "You can respawn on empty land at {size}. Only {limit} per session.",
+      "params": [
+        "size",
+        "limit"
+      ]
+    },
+    "modal.revive.limit": {
+      "en": "once"
+    },
+    "modal.revive.decline": {
+      "en": "See results"
+    },
+    "modal.revive.accept": {
+      "en": "Revive"
+    },
+    "modal.exit.title": {
+      "en": "Quit the game?"
+    },
+    "modal.exit.body": {
+      "en": "Your run in progress won't be saved."
+    },
+    "modal.exit.confirm": {
+      "en": "Quit"
+    },
+    "modal.exit.cancel": {
+      "en": "Keep playing"
+    },
+    "result.newBest": {
+      "en": "New record!"
+    },
+    "result.cells": {
+      "en": "Final territory"
+    },
+    "result.income": {
+      "en": "Land income"
+    },
+    "result.kills": {
+      "en": "Takedowns"
+    },
+    "result.maxTrail": {
+      "en": "Longest trail"
+    },
+    "result.coins": {
+      "en": "Coins earned"
+    },
+    "result.xp": {
+      "en": "XP"
+    },
+    "result.restart": {
+      "en": "Play again"
+    },
+    "result.value.cells": {
+      "en": "{percent}%",
+      "params": [
+        "percent"
+      ]
+    },
+    "result.value.kills": {
+      "en": "{count}",
+      "params": [
+        "count"
+      ]
+    },
+    "result.value.trail": {
+      "en": "{count} tiles",
+      "params": [
+        "count"
+      ]
+    },
+    "result.value.coins": {
+      "en": "+{count}",
+      "params": [
+        "count"
+      ]
+    },
+    "result.value.xp": {
+      "en": "+{count}",
+      "params": [
+        "count"
+      ]
+    },
+    "fx.kill": {
+      "en": "Down!"
+    },
+    "tier.normal": {
+      "en": "Standard"
+    },
+    "tier.commercial": {
+      "en": "Commercial"
+    },
+    "tier.special": {
+      "en": "Landmark"
+    },
+    "tier.label": {
+      "en": "{name} ({value}/s)",
+      "params": [
+        "name",
+        "value"
+      ]
+    },
+    "unit.you": {
+      "en": "You"
+    },
+    "unit.ghost": {
+      "en": "{nick} (yesterday)",
+      "params": [
+        "nick"
+      ]
+    },
+    "error.fatal.title": {
+      "en": "Something went wrong"
+    },
+    "error.noCanvas": {
+      "en": "Could not start the game (canvas element missing)."
+    },
+    "error.sdkInit": {
+      "en": "Failed to initialize the SDK."
+    },
+    "error.gameStart": {
+      "en": "Failed to start the game."
+    },
+    "settings.language": {
+      "en": "Language"
+    },
+    "nick.name.0": {
+      "en": "Swift Shower"
+    },
+    "nick.name.1": {
+      "en": "Swift Dandelion"
+    },
+    "nick.name.2": {
+      "en": "Swift Magpie"
+    },
+    "nick.name.3": {
+      "en": "Swift Sunset"
+    },
+    "nick.name.4": {
+      "en": "Swift Pencil"
+    },
+    "nick.name.5": {
+      "en": "Swift Crane"
+    },
+    "nick.name.6": {
+      "en": "Swift Pinwheel"
+    },
+    "nick.name.7": {
+      "en": "Swift Button"
+    },
+    "nick.name.8": {
+      "en": "Calm Shower"
+    },
+    "nick.name.9": {
+      "en": "Calm Dandelion"
+    },
+    "nick.name.10": {
+      "en": "Calm Magpie"
+    },
+    "nick.name.11": {
+      "en": "Calm Sunset"
+    },
+    "nick.name.12": {
+      "en": "Calm Pencil"
+    },
+    "nick.name.13": {
+      "en": "Calm Crane"
+    },
+    "nick.name.14": {
+      "en": "Calm Pinwheel"
+    },
+    "nick.name.15": {
+      "en": "Calm Button"
+    },
+    "nick.name.16": {
+      "en": "Azure Shower"
+    },
+    "nick.name.17": {
+      "en": "Azure Dandelion"
+    },
+    "nick.name.18": {
+      "en": "Azure Magpie"
+    },
+    "nick.name.19": {
+      "en": "Azure Sunset"
+    },
+    "nick.name.20": {
+      "en": "Azure Pencil"
+    },
+    "nick.name.21": {
+      "en": "Azure Crane"
+    },
+    "nick.name.22": {
+      "en": "Azure Pinwheel"
+    },
+    "nick.name.23": {
+      "en": "Azure Button"
+    },
+    "nick.name.24": {
+      "en": "Tiny Shower"
+    },
+    "nick.name.25": {
+      "en": "Tiny Dandelion"
+    },
+    "nick.name.26": {
+      "en": "Tiny Magpie"
+    },
+    "nick.name.27": {
+      "en": "Tiny Sunset"
+    },
+    "nick.name.28": {
+      "en": "Tiny Pencil"
+    },
+    "nick.name.29": {
+      "en": "Tiny Crane"
+    },
+    "nick.name.30": {
+      "en": "Tiny Pinwheel"
+    },
+    "nick.name.31": {
+      "en": "Tiny Button"
+    },
+    "nick.name.32": {
+      "en": "Deep Shower"
+    },
+    "nick.name.33": {
+      "en": "Deep Dandelion"
+    },
+    "nick.name.34": {
+      "en": "Deep Magpie"
+    },
+    "nick.name.35": {
+      "en": "Deep Sunset"
+    },
+    "nick.name.36": {
+      "en": "Deep Pencil"
+    },
+    "nick.name.37": {
+      "en": "Deep Crane"
+    },
+    "nick.name.38": {
+      "en": "Deep Pinwheel"
+    },
+    "nick.name.39": {
+      "en": "Deep Button"
+    },
+    "nick.name.40": {
+      "en": "Clear Shower"
+    },
+    "nick.name.41": {
+      "en": "Clear Dandelion"
+    },
+    "nick.name.42": {
+      "en": "Clear Magpie"
+    },
+    "nick.name.43": {
+      "en": "Clear Sunset"
+    },
+    "nick.name.44": {
+      "en": "Clear Pencil"
+    },
+    "nick.name.45": {
+      "en": "Clear Crane"
+    },
+    "nick.name.46": {
+      "en": "Clear Pinwheel"
+    },
+    "nick.name.47": {
+      "en": "Clear Button"
+    },
+    "nick.name.48": {
+      "en": "Round Shower"
+    },
+    "nick.name.49": {
+      "en": "Round Dandelion"
+    },
+    "nick.name.50": {
+      "en": "Round Magpie"
+    },
+    "nick.name.51": {
+      "en": "Round Sunset"
+    },
+    "nick.name.52": {
+      "en": "Round Pencil"
+    },
+    "nick.name.53": {
+      "en": "Round Crane"
+    },
+    "nick.name.54": {
+      "en": "Round Pinwheel"
+    },
+    "nick.name.55": {
+      "en": "Round Button"
+    },
+    "nick.name.56": {
+      "en": "Sturdy Shower"
+    },
+    "nick.name.57": {
+      "en": "Sturdy Dandelion"
+    },
+    "nick.name.58": {
+      "en": "Sturdy Magpie"
+    },
+    "nick.name.59": {
+      "en": "Sturdy Sunset"
+    },
+    "nick.name.60": {
+      "en": "Sturdy Pencil"
+    },
+    "nick.name.61": {
+      "en": "Sturdy Crane"
+    },
+    "nick.name.62": {
+      "en": "Sturdy Pinwheel"
+    },
+    "nick.name.63": {
+      "en": "Sturdy Button"
+    },
+    "bot.name.0": {
+      "en": "Keen Agent"
+    },
+    "bot.name.1": {
+      "en": "Keen Landlord"
+    },
+    "bot.name.2": {
+      "en": "Keen Surveyor"
+    },
+    "bot.name.3": {
+      "en": "Keen Pioneer"
+    },
+    "bot.name.4": {
+      "en": "Keen Builder"
+    },
+    "bot.name.5": {
+      "en": "Keen Investor"
+    },
+    "bot.name.6": {
+      "en": "Keen Broker"
+    },
+    "bot.name.7": {
+      "en": "Keen Land King"
+    },
+    "bot.name.8": {
+      "en": "Cold Agent"
+    },
+    "bot.name.9": {
+      "en": "Cold Landlord"
+    },
+    "bot.name.10": {
+      "en": "Cold Surveyor"
+    },
+    "bot.name.11": {
+      "en": "Cold Pioneer"
+    },
+    "bot.name.12": {
+      "en": "Cold Builder"
+    },
+    "bot.name.13": {
+      "en": "Cold Investor"
+    },
+    "bot.name.14": {
+      "en": "Cold Broker"
+    },
+    "bot.name.15": {
+      "en": "Cold Land King"
+    },
+    "bot.name.16": {
+      "en": "Easy Agent"
+    },
+    "bot.name.17": {
+      "en": "Easy Landlord"
+    },
+    "bot.name.18": {
+      "en": "Easy Surveyor"
+    },
+    "bot.name.19": {
+      "en": "Easy Pioneer"
+    },
+    "bot.name.20": {
+      "en": "Easy Builder"
+    },
+    "bot.name.21": {
+      "en": "Easy Investor"
+    },
+    "bot.name.22": {
+      "en": "Easy Broker"
+    },
+    "bot.name.23": {
+      "en": "Easy Land King"
+    },
+    "bot.name.24": {
+      "en": "Dogged Agent"
+    },
+    "bot.name.25": {
+      "en": "Dogged Landlord"
+    },
+    "bot.name.26": {
+      "en": "Dogged Surveyor"
+    },
+    "bot.name.27": {
+      "en": "Dogged Pioneer"
+    },
+    "bot.name.28": {
+      "en": "Dogged Builder"
+    },
+    "bot.name.29": {
+      "en": "Dogged Investor"
+    },
+    "bot.name.30": {
+      "en": "Dogged Broker"
+    },
+    "bot.name.31": {
+      "en": "Dogged Land King"
+    },
+    "bot.name.32": {
+      "en": "Quiet Agent"
+    },
+    "bot.name.33": {
+      "en": "Quiet Landlord"
+    },
+    "bot.name.34": {
+      "en": "Quiet Surveyor"
+    },
+    "bot.name.35": {
+      "en": "Quiet Pioneer"
+    },
+    "bot.name.36": {
+      "en": "Quiet Builder"
+    },
+    "bot.name.37": {
+      "en": "Quiet Investor"
+    },
+    "bot.name.38": {
+      "en": "Quiet Broker"
+    },
+    "bot.name.39": {
+      "en": "Quiet Land King"
+    },
+    "bot.name.40": {
+      "en": "Bold Agent"
+    },
+    "bot.name.41": {
+      "en": "Bold Landlord"
+    },
+    "bot.name.42": {
+      "en": "Bold Surveyor"
+    },
+    "bot.name.43": {
+      "en": "Bold Pioneer"
+    },
+    "bot.name.44": {
+      "en": "Bold Builder"
+    },
+    "bot.name.45": {
+      "en": "Bold Investor"
+    },
+    "bot.name.46": {
+      "en": "Bold Broker"
+    },
+    "bot.name.47": {
+      "en": "Bold Land King"
+    },
+    "bot.name.48": {
+      "en": "Exact Agent"
+    },
+    "bot.name.49": {
+      "en": "Exact Landlord"
+    },
+    "bot.name.50": {
+      "en": "Exact Surveyor"
+    },
+    "bot.name.51": {
+      "en": "Exact Pioneer"
+    },
+    "bot.name.52": {
+      "en": "Exact Builder"
+    },
+    "bot.name.53": {
+      "en": "Exact Investor"
+    },
+    "bot.name.54": {
+      "en": "Exact Broker"
+    },
+    "bot.name.55": {
+      "en": "Exact Land King"
+    },
+    "bot.name.56": {
+      "en": "Sharp Agent"
+    },
+    "bot.name.57": {
+      "en": "Sharp Landlord"
+    },
+    "bot.name.58": {
+      "en": "Sharp Surveyor"
+    },
+    "bot.name.59": {
+      "en": "Sharp Pioneer"
+    },
+    "bot.name.60": {
+      "en": "Sharp Builder"
+    },
+    "bot.name.61": {
+      "en": "Sharp Investor"
+    },
+    "bot.name.62": {
+      "en": "Sharp Broker"
+    },
+    "bot.name.63": {
+      "en": "Sharp Land King"
+    }
+  }
+}

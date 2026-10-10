@@ -1,0 +1,99 @@
+/* ==========================================================================
+ * 시작화면 배너 지면 (상단 1 · 하단 1)
+ *
+ * ★ 이 파일과 menuBanners.ts 만이 배너의 전부다.
+ *   src/game/** 는 «한 바이트도» 건드리지 않는다 — menu.css 를 고치지 않고
+ *   여기서 «덮어쓰는» 이유가 그것이다. (게임 로직 0줄 수정의 기계적 증명인
+ *   src/game/** md5 불변을 깨지 않기 위해서다. _NEXT_BUILD_MUST_FIX.md 참조)
+ *
+ * ★ 색·변수를 새로 만들지 않는다. --sat/--sab/--sal/--sar 는 styles.css,
+ *   --navh 는 hud.css :root 정의를 그대로 쓴다. 배경 rgb(5,6,11) 은
+ *   menu.css 의 .tc-menu 스크림(rgba(5,6,11,.55))과 «같은 색»이다.
+ * ========================================================================== */
+
+/* 지면이 실제로 차지한 «실측» 높이(padding 포함). menuBanners.ts 가 렌더
+   직후 덮어쓴다. 그 전까지는 쓰이지 않는다(예약 클래스가 아직 안 붙는다). */
+.tc-menu {
+  --tc-adh-top: 0px;
+  --tc-adh-bot: 0px;
+}
+
+/* ── 지면 자체 ─────────────────────────────────────────────────────────────
+   ★padding 은 «항상» 준다(렌더 순간 배너가 시스템 UI 밑에서 번쩍 뜨는 것을
+     막는다). 하지만 배경은 .tc-adslot-on 일 때만 칠한다.
+     ⇒ 광고가 없으면 투명 + 내용 0 = 화면에 «아무것도» 보이지 않는다.
+       자리를 잡아뒀다가 접는 방식이 아니라, 애초에 아무 자국도 남기지 않는다. */
+/* ★#app(position:fixed; inset:0)에 붙인다. .tc-menu «안»에 넣으면 안 된다 —
+     .tc-menu 는 overflow-y:auto 스크롤 컨테이너라 그 안의 absolute 자식은
+     내용과 «같이 스크롤»된다. 실제로 작은 화면에서 상단 배너가 시스템 UI 위로
+     -28px 올라가는 것을 측정했다(360x640 스크롤 끝). 그래서 스크롤 밖에 둔다.
+   ★z-index 9 — .tc-menu 가 8 이다(menu.css). 메뉴 위에 떠야 한다. */
+.tc-adslot {
+  position: absolute;
+  z-index: 9;
+  left: 0;
+  right: 0;
+}
+/* 시작화면이 떠 있을 때만 보인다(menuBanners.ts 가 .tc-menu.show 를 관찰한다). */
+.tc-adslot-off {
+  display: none;
+}
+.tc-adslot-top {
+  top: 0;
+  /* 토스 시스템 UI(「··· ✕」)는 --sat + --navh 안에 있다. 그 «아래»에 둔다. */
+  padding: calc(var(--sat) + var(--navh) + 8px) calc(var(--sar) + 12px) 14px
+    calc(var(--sal) + 12px);
+}
+.tc-adslot-bot {
+  bottom: 0;
+  /* 홈 인디케이터(--sab) 위. 「시작하기」 CTA 는 아래 예약 padding 이 지켜준다. */
+  padding: 14px calc(var(--sar) + 12px) calc(var(--sab) + 10px) calc(var(--sal) + 12px);
+}
+
+/* 광고가 «실제로 그려진 뒤»에만 붙는다(menuBanners.ts onAdRendered).
+   작은 화면에서 시트가 넘쳐 스크롤될 때 시트가 배너 «뒤»로 지나가는데,
+   이 불투명 배경이 없으면 글자가 배너에 겹쳐 보인다. */
+.tc-adslot-on {
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+.tc-adslot-top.tc-adslot-on {
+  /* 아래 22px 만 페이드. 퍼센트로 주면 지면이 길어질수록 페이드도 길어져
+     시트 내용이 넓게 비쳐 보인다(320x568 실측). 길이로 고정한다. */
+  background: linear-gradient(
+    180deg,
+    rgba(5, 6, 11, 0.97) 0,
+    rgba(5, 6, 11, 0.97) calc(100% - 22px),
+    rgba(5, 6, 11, 0) 100%
+  );
+}
+.tc-adslot-bot.tc-adslot-on {
+  background: linear-gradient(
+    0deg,
+    rgba(5, 6, 11, 0.97) 0,
+    rgba(5, 6, 11, 0.97) calc(100% - 22px),
+    rgba(5, 6, 11, 0) 100%
+  );
+}
+
+/* 실제 광고가 들어가는 칸. 시트(.tc-menusheet)와 같은 폭으로 묶어 가운데. */
+.tc-adslot-inner {
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+/* ── 자리 예약 ─────────────────────────────────────────────────────────────
+   ★배너가 «실제로 그려졌을 때만» 붙는다.
+     시트를 재배치하지 않는다 — 스크롤 컨테이너의 padding 만 키워서 가운데
+     정렬 기준 영역을 줄인다. 카드 내부 레이아웃은 무접촉.
+   ★--tc-adh-* 는 padding 을 «포함한» 지면 전체 높이다. 그래서 여기서
+     --sat/--navh/--sab 를 다시 더하면 «이중 계산»이 된다. 더하지 마라.
+   ★작은 화면에서 시트가 넘치면 .tc-menu 는 원래부터 스크롤된다. 이 예약
+     덕분에 끝까지 스크롤하면 CTA 가 배너 위로 완전히 빠져나온다 — 배너가
+     CTA 를 «영구히 가리는» 경우가 없다. */
+.tc-menu.tc-adres-top {
+  padding-top: calc(var(--tc-adh-top) + 8px);
+}
+.tc-menu.tc-adres-bot {
+  padding-bottom: calc(var(--tc-adh-bot) + 8px);
+}

@@ -1,0 +1,145 @@
+/* ==========================================================================
+ * 「머니 리그」 교차추천 카드 — 결과 시트 안, 통산 기록 «아래» · 언어 선택 «위» (2026-09-10)
+ *
+ * ★src/game/hud.css 와 별도 파일(src/game/** 무접촉). 토큰은 hud.css :root 만 쓴다.
+ * ★광고처럼 보이지 않게: 배너 프레임·외곽 글로우·그라디언트 텍스트 없음. 라벨 「추천」은 제목 «옆»의
+ *   작은 태그다(제목 위의 아이브로우가 아니다). 버튼은 CTA(다시하기)보다 한 단 아래 위계.
+ * ★adGate 캡처 클릭은 `.tc-result` 안의 `.tc-cta`/`.tc-ghost` 만 가로챈다 — 이 카드의 버튼은 그 클래스를 쓰지 않는다.
+ * ★게임 오버레이 규칙: backdrop-filter 없음 · 애니메이션 없음(결과 시트의 스태거 롤업만 그대로).
+ * ========================================================================== */
+.tc-xp {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 10px 6px 10px 12px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.045);
+  text-align: left;
+}
+.tc-xp-ic {
+  width: 30px;
+  height: 30px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: rgba(255, 206, 74, 0.12);
+  color: var(--gold-a);
+}
+.tc-xp-ic svg {
+  width: 18px;
+  height: 18px;
+}
+.tc-xp-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  /* 한글은 어절 단위로 줄을 바꾼다(hud 루트와 같은 규칙). */
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+/* 제목 + 「추천」 태그. 칸이 좁으면(en 375·390 실측) 태그가 «다음 줄»로 내려간다 —
+   제목이 「Money / League」로 갈라지는 것보다 낫다(실렌더에서 잡은 결함). */
+.tc-xp-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 6px;
+  min-width: 0;
+}
+.tc-xp-title {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+  color: var(--ink-0);
+  white-space: nowrap;
+}
+.tc-xp-tag {
+  flex: none;
+  padding: 1px 6px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+.tc-xp-sub {
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--ink-2);
+}
+/* 실패 문구 — 안내색. 결과 화면의 성과(금색·초록)와 겹치지 않게 잉크 톤. */
+.tc-xp-sub.err {
+  color: var(--ink-1);
+}
+.tc-xp-open {
+  flex: none;
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid rgba(125, 244, 255, 0.45);
+  border-radius: 11px;
+  background: rgba(125, 244, 255, 0.12);
+  color: var(--ink-0);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow: 0 1px 0 rgba(125, 244, 255, 0.12) inset;
+}
+.tc-xp-open:disabled {
+  opacity: 0.6;
+  cursor: default;
+  box-shadow: none;
+}
+.tc-xp-open:active:not(:disabled) {
+  transform: scale(0.97);
+}
+.tc-xp-x {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ink-2);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.tc-xp-x svg {
+  width: 14px;
+  height: 14px;
+}
+.tc-xp-x:active {
+  transform: scale(0.94);
+}
+.tc-xp-open:focus-visible,
+.tc-xp-x:focus-visible {
+  outline: 2px solid var(--acc-0);
+  outline-offset: 2px;
+}
+
+/* 짧은 화면 — hud.css 의 결과 시트 압축 임계(740px)와 같다. 여백만 줄인다. */
+@media (max-height: 740px) {
+  .tc-xp {
+    margin-bottom: 8px;
+    padding: 8px 4px 8px 10px;
+    gap: 8px;
+  }
+  .tc-xp-open {
+    min-height: 36px;
+    padding: 0 12px;
+  }
+}

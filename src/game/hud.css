@@ -1,0 +1,964 @@
+/* ==========================================================================
+ * 인게임 HUD 스타일 — ART_DIRECTION §6.4 / §6.5
+ *
+ * src/styles.css(전역/SDK 셸)와 분리해 둔다. 게임 UI 는 게임 모듈과 같이
+ * 움직이는 물건이라 같은 폴더에 둬야 유지보수가 된다.
+ * (vite cssCodeSplit:false 라 최종 번들은 어차피 CSS 1장이다)
+ *
+ * ★ 상단 오프셋 규칙: --sat(노치) + --navh(투명 네비바).
+ *   granite.config.ts 의 navigationBar.transparentBackground = true 라서
+ *   게임 화면이 네비바 뒤까지 올라온다. --navh 를 빼먹으면 HUD 가 뒤로가기
+ *   버튼 밑에 깔린다 = 심사 반려 사유.
+ * ========================================================================== */
+:root {
+  --navh: 52px;
+  --line: rgba(168, 178, 216, 0.14);
+  --ink-0: #f2f5ff;
+  --ink-1: #a8b2d8;
+  /* ★2026-08-23 대비 정정: #616c93 은 시트 배경 대비 3.06:1 로 WCAG 2.2 AA
+     (본문 4.5:1) «미달»이었다. 이 토큰을 쓰는 12곳이 전부 12~12.5px 텍스트라
+     대형 텍스트 예외(3:1)도 못 탄다. → 6.18:1 / 6.99:1 통과.
+     ⛔이 토큰은 12곳 «전부» color: 로만 쓴다(border·background·shadow 0건).
+       색만 바뀌고 레이아웃·터치타깃은 기하학적으로 불변이다. */
+  --ink-2: #8fa3c8;
+  --gold-a: #ffce4a;
+  --acc-0: #00e5ff;
+  --acc-1: #4c6bff;
+  --acc-2: #9b5cff;
+  --danger-2: #ff2d55;
+  --success-2: #24e5a0;
+}
+
+.tc-hud {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  font-variant-numeric: tabular-nums;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+/* ---- 상단 pill / 칩 ------------------------------------------------------ */
+.tc-top {
+  position: absolute;
+  top: calc(var(--sat) + var(--navh));
+  left: calc(var(--sal) + 12px);
+  right: calc(var(--sar) + 12px);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tc-chip {
+  min-width: 46px;
+  height: 44px;
+  padding: 0 10px;
+  display: flex;
+  /* ★ baseline 금지. 44px 고정 높이 박스에서 baseline 정렬은 글자 묶음을
+     cross-start(위)에 붙여, 아래로만 여백이 남아 위로 쏠려 보인다
+     (실기기 지적 2026-08-05). center 로 묶음 자체를 세로 중앙에 두고,
+     단위 글자만 아래 규칙에서 내려 baseline 느낌을 되살린다. */
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  /**
+   * ★ backdrop-filter 를 «인게임 HUD 에서» 걷어냈다 (2026-08-20, 성능).
+   *
+   * 왜: backdrop-filter 는 «배경이 바뀔 때마다» 컴포지터가 배경을 다시 떠서
+   *     블러한다. 이 HUD 의 배경은 «매 프레임 다시 그려지는 캔버스»다.
+   *     즉 60fps 면 초당 60회 풀해상도 backdrop 을 읽어 블러한다.
+   *     실측(CDP 트레이스, 2026-08-20): 인게임 렌더패스가 프레임당
+   *       6.0 → 2.0 개, DrawQuad 13 → 6 개로 떨어졌다(2회 반복, 편차 0).
+   *     모바일 GPU 는 타일 기반이라 «배경 되읽기»가 타일을 통째로 flush 시킨다.
+   *     안드로이드가 iOS 보다 더 나쁜 것과도 정합한다.
+   * ★ 적응형 해상도(render.ts RES_STEPS)로는 이 비용이 «안 줄어든다».
+   *   캔버스 백버퍼를 줄여도 컴포지터는 CSS 해상도 그대로 블러한다.
+   *   260809 최적화가 캔버스 레이어만 보고 여기를 못 본 이유다.
+   * ★ 겉모습 보정: 블러가 기여하던 몫만큼 배경 불투명도를 0.72 → 0.88 로
+   *   올렸다. 원래도 72% 가 불투명 딥네이비라 블러는 나머지 28% 에만
+   *   작용했다. 전후 스크린샷으로 확인했다.
+   * ⛔ 메뉴·모달(.tc-menu / .tc-modal)의 블러는 «그대로 둔다» — 그쪽 배경은
+   *   정지 화면이라 컴포지터가 한 번만 뜬다. 비용이 없다.
+   */
+  background: rgba(10, 13, 22, 0.88);
+}
+.tc-chip b {
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  color: var(--ink-0);
+}
+.tc-chip span {
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+  /* 20px 숫자와 11px 단위를 각각 세로중앙에 두면 단위의 베이스라인이
+     약 3px 위로 뜬다(ascent≈0.8em 기준: 0.8*(20-11)/2 ≈ 2.7px).
+     그만큼 내려 원래의 baseline 정렬 인상을 유지한다. */
+  position: relative;
+  top: 3px;
+  color: var(--ink-2);
+}
+.tc-chip.lead b {
+  color: var(--gold-a);
+}
+.tc-chip.urgent b {
+  color: var(--danger-2);
+  animation: tc-pulse 0.9s ease-in-out infinite;
+}
+
+.tc-pill {
+  position: relative;
+  flex: 1;
+  height: 44px;
+  padding: 0 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  /* ★ .tc-chip 과 같은 이유로 backdrop-filter 제거 (2026-08-20 성능). 위 주석 참조.
+     이 pill 은 «화면 전폭»이라 블러 면적이 셋 중 가장 컸다. */
+  background: rgba(10, 13, 22, 0.88);
+  overflow: hidden;
+}
+/**
+ * ★ white-space: nowrap 은 지우지 마라.
+ *   점수와 수입표시는 «한 줄» 전제로 디자인된 요소인데 flex 아이템이라
+ *   폭이 모자라면 조용히 접힌다. 실측 결함: 320px 폭 + ru 에서 수입표시가
+ *   자릿수가 두 자리(`+41/с`)가 되는 순간 `+41/` / `с` 두 줄로 갈라져
+ *   상단 바가 무너졌다. 360/393/430px 에서는 재현되지 않아 놓치기 쉽다.
+ *   ※ 이 결함은 scrollWidth 검사로는 안 잡힌다 — 접히면 가로로 넘치지
+ *     않으므로 scrollWidth == clientWidth 다. 라인박스 수를 세야 보인다.
+ */
+.tc-score {
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  color: var(--ink-0);
+  white-space: nowrap;
+}
+.tc-rate {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--ink-1);
+  transition: color 0.25s ease;
+  white-space: nowrap;
+  /* 좁은 화면에서 이 칸이 먼저 찌그러지면서 접혔다 → 축소 금지 */
+  flex-shrink: 0;
+}
+/* 튕기기 게이지 (§3-A) — pill 하단 4px 트랙 */
+.tc-gauge {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 5px;
+  height: 4px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.09);
+  overflow: hidden;
+}
+.tc-gauge i {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--acc-0), var(--acc-1) 60%, var(--acc-2));
+  box-shadow: 2px 0 0 rgba(255, 255, 255, 0.9);
+  transition: width 0.12s linear;
+}
+
+/* ---- 미니맵 / 킬 피드 ---------------------------------------------------- */
+.tc-mini {
+  position: absolute;
+  right: calc(var(--sar) + 12px);
+  top: calc(var(--sat) + var(--navh) + 54px);
+  width: 78px;
+  height: auto;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(5, 6, 11, 0.78);
+  opacity: 0.92;
+}
+.tc-feed {
+  position: absolute;
+  right: calc(var(--sar) + 12px);
+  top: calc(var(--sat) + var(--navh) + 205px);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+.tc-feed-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: rgba(5, 6, 11, 0.66);
+  border: 1px solid var(--line);
+  font-size: 11px;
+  font-weight: 800;
+  animation: tc-slide-in 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+}
+/*
+ * 킬피드 구분자 「A ✕ B」.
+ *
+ * ★2026-08-23 — 글자 ✕ 를 «CSS 로 그린 도형»으로 바꿨다.
+ *   ✕(U+2715)는 폰트마다 굵기·크기·베이스라인이 제각각이라 기기별로 다르게 보인다.
+ *   ▲▼·♪ 를 CSS/SVG 로 바꾼 것과 «같은 이유»다(President 지시: AI 티 제거).
+ *   ⇒ `hud.ts` 는 `<s>✕</s>` 를 그대로 두되 여기서 글자를 숨기고 두 막대를 그린다.
+ *     («그린다»가 아니라 «숨긴다»로 한 이유: hud.ts 를 건드리면 다른 레인의 검증
+ *      기준선이 흔들린다. CSS 만으로 닫힌다.)
+ *   ⛔`font-size: 0` 을 쓰지 마라 — 스크린리더가 못 읽는다. 색만 투명으로 만든다.
+ */
+.tc-feed-row s {
+  position: relative;
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  text-decoration: none;
+  overflow: hidden;
+  vertical-align: -1px;
+}
+.tc-feed-row s::before,
+.tc-feed-row s::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 4px;
+  width: 9px;
+  height: 1.5px;
+  border-radius: 1px;
+  background: var(--danger-2);
+}
+.tc-feed-row s::before {
+  transform: rotate(45deg);
+}
+.tc-feed-row s::after {
+  transform: rotate(-45deg);
+}
+.tc-feed-row em {
+  font-style: normal;
+}
+
+/* ---- 조이스틱 (터치 시작 지점 동적 배치) --------------------------------- */
+.tc-joy {
+  position: absolute;
+  width: 104px;
+  height: 104px;
+  margin: -52px 0 0 -52px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.06);
+  opacity: 0;
+  transition: opacity 0.14s ease;
+}
+.tc-joy.on {
+  opacity: 0.62;
+}
+.tc-joy i {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 48px;
+  height: 48px;
+  margin: -24px 0 0 -24px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--acc-0), var(--acc-1));
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+/* ---- 튕기기 버튼 (conic 게이지) ------------------------------------------ */
+.tc-bounce {
+  position: absolute;
+  right: calc(var(--sar) + 16px);
+  bottom: calc(var(--sab) + 26px);
+  width: 80px;
+  height: 80px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  pointer-events: auto;
+  touch-action: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.tc-bounce u {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(
+    from -90deg,
+    var(--acc-0) calc(var(--g, 0) * 360deg),
+    rgba(255, 255, 255, 0.08) 0
+  );
+  -webkit-mask: radial-gradient(circle, transparent 60%, #000 62%);
+  mask: radial-gradient(circle, transparent 60%, #000 62%);
+}
+.tc-bounce b {
+  position: absolute;
+  inset: 8px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: var(--ink-2);
+  /* ★ .tc-chip 과 같은 이유로 backdrop-filter 제거 (2026-08-20 성능). 위 주석 참조.
+     0.82 → 0.92: 이 원은 «conic 게이지 위»에 얹혀 있어서 불투명할수록
+     게이지 안쪽이 깨끗하게 가려진다(마스크 부담도 같이 준다). */
+  background: rgba(10, 13, 22, 0.92);
+  border: 1px solid var(--line);
+  transition: color 0.18s ease, box-shadow 0.18s ease, transform 0.12s ease;
+}
+.tc-bounce.ready b {
+  color: #05060b;
+  background: linear-gradient(135deg, var(--acc-0), var(--acc-1));
+  box-shadow: 0 0 22px rgba(56, 242, 255, 0.55);
+}
+.tc-bounce.on b {
+  transform: scale(0.94);
+}
+
+/* ---- 위험(영토 밖 5초 이상) 가장자리 펄스 -------------------------------- */
+.tc-danger {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  box-shadow: inset 0 0 42px 10px rgba(255, 45, 85, 0.5);
+}
+.tc-danger.on {
+  opacity: 1;
+  animation: tc-pulse 0.9s ease-in-out infinite;
+}
+
+/* ---- 센터 메시지 --------------------------------------------------------- */
+.tc-center {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 36%;
+  text-align: center;
+  font-size: 34px;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  color: var(--ink-0);
+  text-shadow: 0 4px 24px rgba(0, 0, 0, 0.7);
+  opacity: 0;
+  transform: scale(1.12);
+  transition: opacity 0.3s ease, transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.tc-center.show {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* ---- 모달(일시정지 / 부활 / 결과) ---------------------------------------- */
+/**
+ * ★ overflow-y / safe flex-end 는 지우지 마라 — 화면 밖으로 «영구 소실»되던 버그를 막는다.
+ *
+ * 실측 결함(2026-08-09): 결과 시트 높이가 661.9px 로 고정인데(로케일 무관 —
+ * 언어 문제가 아니라 순수 높이 문제다) 화면이 짧으면 시트가 컨테이너 «위쪽»으로
+ * 넘쳤다. align-items:flex-end 는 넘칠 때 시작점이 아니라 끝점을 기준으로 잡아
+ * 넘친 부분이 뷰포트 위로 나가고, overflow 규칙이 없어 스크롤로도 못 갔다.
+ *   320x568  상단 107.9px 소실 → 순위 숫자 + 순위 단위 + 신기록 배너가 통째로 안 보임
+ *   360x640  상단  35.9px 소실 → 순위 숫자가 안 보임 (보급형 안드로이드 최빈 해상도)
+ *   375x667  상단   8.9px 소실 → 주요 요소는 남음
+ *   393x852+ 정상
+ * 즉 사용자가 «자기 순위»(게임의 결론)를 못 보는 상태였다. 통산기록 블록(145px)이
+ * 추가되면서 시트가 길어진 게 직접 원인이다.
+ *
+ * safe 키워드: 넘칠 때만 start 정렬로 자동 대피시킨다. 미지원 구형 WebView 는
+ * 이 선언을 통째로 무시하고 위의 flex-end 를 유지하므로 «기존 동작»으로 안전하게
+ * 퇴화한다(회귀 없음).
+ */
+.tc-modal {
+  position: absolute;
+  inset: 0;
+  display: none;
+  align-items: flex-end;
+  align-items: safe flex-end;
+  justify-content: center;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: calc(var(--sat) + var(--navh)) calc(var(--sar) + 14px) calc(var(--sab) + 14px)
+    calc(var(--sal) + 14px);
+  background: rgba(5, 6, 11, 0.62);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  pointer-events: auto;
+}
+.tc-modal.show {
+  display: flex;
+  animation: tc-fade 0.18s ease-out;
+}
+.tc-sheet {
+  width: 100%;
+  max-width: 420px;
+  padding: 22px 20px 16px;
+  border-radius: 22px;
+  background: linear-gradient(180deg, #1b2238, #121728);
+  border: 1px solid var(--line);
+  box-shadow: 0 18px 56px rgba(0, 0, 0, 0.55);
+  animation: tc-rise 0.26s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.tc-sheet h2 {
+  margin: 0 0 8px;
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--ink-0);
+}
+.tc-sheet p {
+  margin: 0 0 18px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--ink-1);
+}
+.tc-actions {
+  display: flex;
+  gap: 8px;
+}
+.tc-cta,
+.tc-ghost {
+  flex: 1;
+  min-height: 50px;
+  border: 0;
+  border-radius: 15px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.tc-cta {
+  color: #05060b;
+  background: linear-gradient(135deg, var(--acc-0), var(--acc-1));
+  /**
+   * ★T2(2026-08-22, taste-skill §9.A "no neon/outer glows") — 예전엔
+   *   `0 8px 22px rgba(56,242,255,.28)`(색 번짐 22px 외곽 글로우, AI 티 감사
+   *   지적 대상)였다. 그라디언트 배경은 그대로 두되(브랜드 컬러, 배제 대상
+   *   아님) 외곽 네온만 걷어내고 «절제된 입체감»(짙은 드롭섀도 + 위쪽 유리
+   *   하이라이트)으로 바꿨다. 픽셀 자체는 CTA 자리 어디에도 새로 안 생긴다
+   *   — 그림자 반경만 줄었다(레이아웃·터치 타깃 불변).
+   */
+  box-shadow:
+    0 4px 10px rgba(5, 6, 11, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+.tc-ghost {
+  color: var(--ink-0);
+  background: rgba(255, 255, 255, 0.08);
+}
+.tc-cta:active,
+.tc-ghost:active {
+  transform: scale(0.98);
+}
+.tc-cnt {
+  font-style: normal;
+  opacity: 0.65;
+  /*
+    부활 버튼의 카운트다운 숫자를 라벨에서 띄운다. 없으면 'Revive4',
+    'Возродиться4' 처럼 붙어 나온다(전 로케일).
+    예전 마크업은 '부활하기 <i>5</i>' 처럼 문자열 안에 공백이 하나 있었는데,
+    HTML 문자열을 DOM 조립으로 바꾸면서 그 공백이 사라졌다.
+    공백 문자로 되돌리지 말고 여백은 CSS 로 준다 — 번역문에 의존하지 않고,
+    번역자가 지울 수도 없다.
+    margin(gap 아님) 인 이유: .tc-cta 는 .tc-actions 의 flex 자식일 뿐
+    자기 자신은 flex 컨테이너가 아니라서 gap 이 먹지 않는다.
+  */
+  margin-left: 6px;
+}
+
+/* ---- 부활 모달: 「광고 보고 부활」 변형 (2026-09-05) ----------------------
+   ★새 색·새 그림자·새 blur 를 «만들지 않는다». 기존 .tc-cta/.tc-ghost 문법을
+     그대로 쓰고 «폭 배분과 줄바꿈»만 손본다 — 배경이 매 순간 바뀌는 게임
+     오버레이라 대비는 이미 검증된 토큰(ink-0 on 오로라 그라디언트)에 맡긴다.
+   ★로케일마다 문자열 길이가 다르다(ko 「광고 보고 부활하기」 9자 /
+     de 「Werbung ansehen」 15자 / ru 「Смотреть рекламу」 16자).
+     고정폭을 «가정하지 않는다» — 두 줄이 되면 버튼이 늘어나게 둔다.        */
+.tc-revive .tc-cta,
+.tc-revive .tc-ghost {
+  /* 좌우 여백이 0이면 두 줄 라벨이 버튼 가장자리에 붙는다. */
+  padding: 8px 12px;
+  line-height: 1.25;
+  /* min-height 50px 은 유지(WCAG 2.2 AA 의 24px 최소 타깃을 크게 넘는다).
+     내용이 길면 «늘어나야» 하므로 height 를 고정하지 않는다. */
+  height: auto;
+}
+/* 광고 변형에서는 수락 라벨이 「결과 보기」보다 길다 → 폭을 더 준다. */
+.tc-revive.ad .tc-cta {
+  flex: 1.5;
+}
+.tc-revive.ad .tc-ghost {
+  flex: 1;
+}
+
+/* 로딩(광고 불러오는 중) — 두 버튼 다 disabled. «어디를 눌러도 반응이 없다»가
+   아니라 «지금 뭔가 진행 중이다»로 읽혀야 한다: 라벨이 상태를 말하고
+   (「광고 불러오는 중…」), 버튼은 흐려지되 사라지지 않는다.
+   ⛔ 스피너 애니메이션을 넣지 않는다 — 이 모달 뒤에서 게임 캔버스가 계속
+      그려지고 있고, 여기서 GPU 를 한 조각 더 쓸 이유가 없다.               */
+.tc-revive .tc-cta:disabled,
+.tc-revive .tc-ghost:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.tc-revive .tc-cta:disabled:active,
+.tc-revive .tc-ghost:disabled:active {
+  transform: none;
+}
+/* 로딩 중에는 제안 타이머가 «실제로» 멈춰 있다(World.revivePaused).
+   멈춘 숫자를 남겨두면 화면이 고장 난 것처럼 보이므로 hud.ts 가 hidden 을 건다.
+   (전역 [hidden] 규칙에 기대지 않고 여기서 명시한다 — 이 파일이 정본이다) */
+.tc-revive .tc-cnt[hidden] {
+  display: none;
+}
+
+/* ---- 결과 화면 ----------------------------------------------------------- */
+.tc-rankbig {
+  font-size: 62px;
+  font-weight: 900;
+  letter-spacing: -0.045em;
+  line-height: 0.95;
+  text-align: center;
+  margin-bottom: 4px;
+}
+.tc-rankbig small {
+  font-size: 20px;
+  margin-left: 4px;
+  color: var(--ink-2);
+}
+.tc-newbest {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--gold-a);
+  margin-bottom: 12px;
+}
+.tc-stats {
+  list-style: none;
+  margin: 8px 0 18px;
+  padding: 0;
+}
+.tc-stats li {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 9px 2px;
+  border-bottom: 1px solid var(--line);
+  opacity: 0;
+  animation: tc-roll 0.34s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.tc-stats span {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+.tc-stats b {
+  font-size: 17px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: var(--ink-0);
+}
+
+/* ── 통산 기록 블록 (2026-08-05) ─────────────────────────────────────────
+   이 판 성적(.tc-stats)과 시각적으로 구분되어야 한다. 같은 크기로 두면
+   어디까지가 이번 판인지 안 읽힌다. 제목을 얹고 값을 한 단 줄인다. */
+.tc-career-title {
+  margin: 2px 0 0;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--ink-2);
+  text-transform: uppercase;
+}
+.tc-career {
+  margin: 4px 0 16px;
+}
+.tc-career li {
+  padding: 7px 2px;
+}
+.tc-career span {
+  font-size: 12px;
+}
+.tc-career b {
+  font-size: 15px;
+}
+
+@keyframes tc-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.42;
+  }
+}
+@keyframes tc-slide-in {
+  from {
+    transform: translateX(18px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+@keyframes tc-roll {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/**
+ * 막판 카운트다운·위험 «깜빡임» 차단 (President 지시로 기본 끔).
+ * ★ 「연출」만 끄고 «정보»는 남긴다 — `.tc-chip.urgent b` 의 빨간색(--danger-2)과
+ *   `.tc-danger` 의 가장자리 발광은 «그대로» 두고, 반복 애니메이션만 없앤다.
+ *   진동/깜빡임이 싫으신 것이지 「얼마 안 남은 걸 모른 채 끝나는 것」이 아니다.
+ * ★ 아래 prefers-reduced-motion 규칙과 «같은 선언»을 쓴다 — 접근성 경로에서 이미
+ *   검증된 규칙이라 새 메커니즘을 만들 이유가 없다.
+ * 되돌리기: hud.ts 의 COUNTDOWN_FX_ENABLED = true (또는 ?countdownfx=on)
+ */
+.tc-hud.tc-noflash .tc-chip.urgent b,
+.tc-hud.tc-noflash .tc-danger.on {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tc-chip.urgent b,
+  .tc-danger.on,
+  .tc-feed-row,
+  .tc-stats li,
+  .tc-sheet {
+    animation: none;
+  }
+  .tc-stats li {
+    opacity: 1;
+  }
+}
+
+/* ── 언어 선택 ──────────────────────────────────────────────────────────────
+   설치된 앱에서 9개 언어를 실제로 전달하는 경로가 이 셀렉터 하나뿐이라
+   (스토어 패키지는 EN-US 단일 언어로 등재된다) 일시정지 시트와 결과 시트
+   양쪽에 붙는다. 눈에 띄되 CTA 보다 시각적 우선순위는 낮게 둔다.
+   옵션 라벨은 엔도님(그 언어로 쓴 언어 이름)이라 UI 를 못 읽는 사용자도
+   자기 언어를 찾을 수 있다. */
+.tc-lang {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 4px 0 2px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.tc-lang-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-2);
+  letter-spacing: -0.01em;
+}
+
+/**
+ * ★T3(2026-08-22) — 「언어 행 레이아웃 결함」 정정.
+ *   예전: min-width:44% 로 박스를 강제로 넓혀 놓고 text-align:right 로 글자를
+ *   오른쪽 끝에 몰아붙였다 — 결과: 짧은 언어명(예 "한국어")일 때 박스 «왼쪽
+ *   절반»이 아무 것도 없는 빈 공간으로 보였다(실렌더 스크린샷으로 확인,
+ *   langrow_T3before.png). 게다가 appearance:none 이 네이티브 화살표를
+ *   지운 자리에 아무 것도 채워 넣지 않아 "이게 드롭다운"이라는 신호 자체가
+ *   없었다.
+ *   지금: ① 글자를 왼쪽(자연스러운 읽기 방향)으로 되돌리고 ② 박스 폭을
+ *   내용에 맞춰 늘어나게(flex:1 1 auto, min-width 폐지) 하고 ③ 걷어냈던
+ *   화살표 자리에 CSS 만으로 셰브런을 그려 넣는다(새 에셋 파일 없음,
+ *   currentColor 상속이라 다크 배경에서 자동으로 보인다).
+ *   ⛔ 러시아어("Русский")·독일어처럼 긴 옵션이 있어 max-width 는 유지한다
+ *   (잘리는 것보다 줄바꿈/축소가 낫다는 기존 원칙과 동일선상).
+ */
+.tc-lang-select {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 62%;
+  padding: 8px 30px 8px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 10px;
+  background:
+    rgba(10, 12, 22, 0.9)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6' fill='none'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23a8b2d8' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+    no-repeat right 12px center;
+  color: var(--ink-0);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  /* 44px 터치 타깃 확보 — 접근성 최소치 */
+  min-height: 44px;
+  appearance: none;
+  text-align: left;
+  text-align-last: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.tc-lang-select:focus-visible {
+  outline: 2px solid var(--gold-a);
+  outline-offset: 2px;
+}
+
+/* 네이티브 드롭다운 목록은 OS 가 그린다 — 어두운 배경을 강제하면 안드로이드
+   일부에서 흰 글자에 흰 배경이 되어 글자가 사라진다. option 은 건드리지 않는다. */
+
+/* ── 짧은 화면 압축 (2026-08-09) ─────────────────────────────────────────
+   위 .tc-modal 주석의 결함 대응 «2단»이다.
+   overflow-y:auto 만으로도 «도달 불가»는 사라지지만, 결과 화면은 한눈에
+   읽히는 게 맞다 — 순위를 보려고 스크롤해야 하는 건 여전히 나쁜 경험이다.
+   그래서 세로가 짧은 기기에서는 시트를 압축해 «스크롤 없이» 들어가게 한다.
+   ★ 393x852(현행 표준) 이상은 이 블록에 걸리지 않는다 — 기본 디자인 불변.
+   ★ 값을 바꿨으면 반드시 재측정해라. 기준은 «시트 높이 <= 뷰포트 - 52(네비바)
+     - 14(하단여백)». 측정 스크립트: perf_evidence/modal_vfit.json 참조. */
+@media (max-height: 740px) {
+  .tc-sheet {
+    padding: 14px 16px 12px;
+  }
+  .tc-rankbig {
+    font-size: 40px;
+    margin-bottom: 2px;
+  }
+  .tc-rankbig small {
+    font-size: 15px;
+  }
+  .tc-newbest {
+    margin-bottom: 6px;
+  }
+  .tc-stats {
+    margin: 4px 0 8px;
+  }
+  .tc-stats li {
+    padding: 5px 2px;
+  }
+  .tc-stats b {
+    font-size: 15px;
+  }
+  .tc-career-title {
+    margin: 0;
+  }
+  .tc-career {
+    margin: 2px 0 8px;
+  }
+  .tc-career li {
+    padding: 4px 2px;
+  }
+  .tc-career b {
+    font-size: 13px;
+  }
+  .tc-lang {
+    margin: 2px 0 2px;
+    padding: 6px 10px;
+  }
+  .tc-cta,
+  .tc-ghost {
+    min-height: 44px;
+  }
+}
+
+/* ==========================================================================
+ * ★2026-08-30 그래픽 고도화 — 타이포·위계·토글 (DESIGN.md §6~§7)
+ *   · 숫자·라틴은 디스플레이체(Chakra Petch 600/700, index.html @font-face). 한글은
+ *     unicode-range 밖이라 시스템 한글 폰트로 폴백한다 — «숫자만» 디스플레이체다.
+ *   · 아래 규칙은 위 규칙을 «덮어쓴다»(같은 선택자, 뒤에 선언). 레이아웃·터치 타깃 불변.
+ * ========================================================================== */
+:root {
+  --font-display: 'Chakra Petch', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo',
+    'Noto Sans KR', 'Malgun Gothic', system-ui, sans-serif;
+  --ink-2: #93a6cc; /* 6.6:1 on #121728 — 12px 라벨도 AA */
+}
+
+.tc-chip b,
+.tc-score,
+.tc-rate,
+.tc-rankbig,
+.tc-stats b,
+.tc-menu-best b,
+.tc-cnt {
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+.tc-chip b {
+  font-size: 21px;
+  letter-spacing: 0;
+}
+.tc-score {
+  font-size: 23px;
+  letter-spacing: 0;
+}
+.tc-rate {
+  font-weight: 600;
+}
+.tc-chip.lead {
+  border-color: rgba(255, 206, 74, 0.45);
+}
+.tc-chip.urgent {
+  border-color: rgba(255, 45, 85, 0.55);
+}
+
+/* 결과 화면 위계: 순위(주인공) → 모드 태그 → 이번 판 → 통산 */
+.tc-rankbig {
+  font-size: 68px;
+  letter-spacing: -0.02em;
+  line-height: 0.95;
+  margin: 2px 0 6px;
+  text-shadow: 3px 3px 0 rgba(5, 6, 11, 0.55);
+}
+.tc-rankbig small {
+  font-family: inherit;
+  font-size: 18px;
+  font-weight: 700;
+  margin-left: 6px;
+  letter-spacing: 0;
+}
+.tc-resheet .tc-menu-sub {
+  margin-bottom: 12px;
+}
+.tc-newbest {
+  display: inline-block;
+  margin: 0 auto 12px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  letter-spacing: 0.02em;
+  color: #1a1200;
+  background: var(--gold-a);
+}
+.tc-resheet {
+  text-align: center;
+}
+.tc-resheet .tc-stats,
+.tc-resheet .tc-career-title,
+.tc-resheet .tc-lang,
+.tc-resheet .tc-actions {
+  text-align: left;
+}
+.tc-stats li {
+  padding: 8px 2px;
+}
+.tc-stats span {
+  font-size: 13px;
+  color: var(--ink-1);
+}
+.tc-stats b {
+  font-size: 18px;
+  letter-spacing: 0;
+}
+.tc-career-title {
+  letter-spacing: 0.06em;
+}
+
+/* 시트·버튼 마감 — 유리 없는 불투명판, 절제된 입체 */
+.tc-sheet {
+  background: linear-gradient(180deg, #1c2340, #111627);
+  border-color: rgba(168, 178, 216, 0.18);
+  box-shadow:
+    0 18px 56px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+.tc-cta {
+  color: #06121a;
+  background: linear-gradient(135deg, #7df4ff, #3b82f6 70%, #4c6bff);
+}
+.tc-cta:focus-visible,
+.tc-ghost:focus-visible,
+.tc-switch:focus-visible {
+  outline: 2px solid var(--acc-0);
+  outline-offset: 2px;
+}
+
+/* 효과음 토글 — 언어 행과 같은 문법 */
+.tc-sound {
+  margin-top: 6px;
+}
+.tc-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 6px 6px 6px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  background: rgba(10, 12, 22, 0.9);
+  color: var(--ink-0);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.tc-switch i {
+  position: relative;
+  display: block;
+  width: 42px;
+  height: 24px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  transition: background 0.18s ease;
+}
+.tc-switch i::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--ink-1);
+  transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1), background 0.18s ease;
+}
+.tc-switch.on i {
+  background: linear-gradient(135deg, var(--acc-0), var(--acc-1));
+}
+.tc-switch.on i::after {
+  transform: translateX(18px);
+  background: #fff;
+}
+.tc-switch b {
+  min-width: 3em;
+  padding-right: 6px;
+  font-weight: 700;
+  color: var(--ink-1);
+}
+.tc-switch.on b {
+  color: var(--ink-0);
+}
+
+/* 킬피드·미니맵 — 판 위에 얹히므로 불투명도로 대비 확보(블러 없음) */
+.tc-feed-row {
+  background: rgba(5, 6, 11, 0.78);
+}
+.tc-mini {
+  background: rgba(5, 6, 11, 0.82);
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tc-switch i,
+  .tc-switch i::after {
+    transition: none;
+  }
+}
