@@ -2,7 +2,7 @@
   "id": "Territory Clash",
   "name": "Territory Clash",
   "short_name": "TerritoryClash",
-  "description": "Fast 60-second territory battles. Draw a trail out of your own ground and close the loop to capture everything inside it, and cut a rival's trail to take 30 percent of their land. Plays fully offline with no ads, no sign-in and no data collection. Available in 9 languages.",
+  "description": "Fast 60-second territory battles. Draw a trail out of your own ground and close the loop to capture everything inside it, and cut a rival's trail to take 30 percent of their land. Plays fully offline with no sign-in and no data collection. Available in 9 languages.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
